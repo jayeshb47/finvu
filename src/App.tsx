@@ -8,6 +8,7 @@ declare global {
       login: (handleID: string, userID: string, mobileNo: string) => Promise<any>;
       verifyOTP: (otp: string) => Promise<any>;
       logout: () => void;
+      userLinkedAccounts: () => Promise<any>;
     };
   }
 }
@@ -15,14 +16,16 @@ declare global {
 
 function App() {
   const [otp, setOtp] = useState<string>('');
+  const [linkedAccounts, setLinkedAccounts] = useState<any[]>([]);
 
   useEffect(() => {
     window.finvuClient.open();
+    console.log(window.finvuClient);
   }, []);
   const handleLogin = async () => {
-    const userID = "9654106940@finvu";
+    const userID = "9582111131@finvu";
     const mobileNo = "";
-    const handleID = "2de38844-6f30-4fab-9105-80e9114bb525";
+    const handleID = "9686b23c-8db8-4fd5-b31e-bc84fa4dda90";
 
     try {
       
@@ -53,9 +56,20 @@ function App() {
       console.error('Logout failed', error);
     }
   };
-  return <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+
+  const handleFetchLinkedAccounts = async () => {
+    try {
+      const linkedAccountsResponse = await window.finvuClient.userLinkedAccounts();
+      console.log(linkedAccountsResponse);
+      setLinkedAccounts(linkedAccountsResponse.LinkedAccounts);
+    } catch (error) {
+      console.error('Failed to fetch linked accounts', error);
+    }
+  };
+
+  return <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 gap-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">WebSocket Demo Page</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Finvu</h1>
         <Button
           onClick={handleLogin}
           className="w-full "
@@ -75,13 +89,29 @@ function App() {
         >
           Verify OTP
         </Button>
-        <Button
+        
+      </div>
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 space-y-4">
+        <Button onClick={handleFetchLinkedAccounts} className="w-full">User Linked Accounts</Button>
+        <ul>
+          {/* {linkedAccounts.map((account, index) => (
+            <li key={index} className="border-b border-gray-300 py-2">
+              <div><strong>User ID:</strong> {account.userId}</div>
+              <div><strong>FIP Name:</strong> {account.fipName}</div>
+              <div><strong>Masked Account Number:</strong> {account.maskedAccNumber}</div>
+              <div><strong>Account Type:</strong> {account.accType}</div>
+            </li>
+          ))} */}
+        </ul>
+      </div>
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 space-y-4">
+      <Button
           onClick={handleLogout}
-          className="w-full"
+          className="w-full" 
         >
           Logout
         </Button>
-      </div>
+        </div>
     </div>
 }
 
