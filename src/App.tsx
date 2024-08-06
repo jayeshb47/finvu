@@ -1,35 +1,47 @@
 import { useState, useEffect } from "react";
 import { Button } from "./components/ui/button";
+import {useLocation} from 'react-router-dom'
 
 declare global {
   interface Window {
     finvuClient: {
       open: () => void;
-      login: (handleID: string, userID: string, mobileNo: string) => Promise<any>;
+      login: (handleId: string, userID: string, mobileNo: string) => Promise<any>;
       verifyOTP: (otp: string) => Promise<any>;
       logout: () => void;
       userLinkedAccounts: () => Promise<any>;
+      discoverAccounts: (fipId: string, identifiers: any) => Promise<any>;
+      accountLinking: (fipid: string, account: any) => Promise<any>;
+      accountConfirmLinking: (accountLinkRefNumber: string, token: string) => Promise<any>;
     };
   }
 }
 
 
 function App() {
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search);
+  const mobileNumber = queryParams.get('mobileNumber');
+  const panNumber = queryParams.get('panNumber');
+  const handleId = queryParams.get('handleId');
+  console.log({mobileNumber})
+  console.log({panNumber})
+  console.log({handleId})
   const [otp, setOtp] = useState<string>('');
   const [linkedAccounts, setLinkedAccounts] = useState<any[]>([]);
+  const [discoveredAccounts, setDiscoveredAccounts] = useState<any[]>([]);
 
   useEffect(() => {
     window.finvuClient.open();
     console.log(window.finvuClient);
   }, []);
   const handleLogin = async () => {
-    const userID = "9582111131@finvu";
+    const userID = `${mobileNumber}@finvu`;
     const mobileNo = "";
-    const handleID = "9686b23c-8db8-4fd5-b31e-bc84fa4dda90";
 
     try {
       
-      const loginResponse = await window.finvuClient.login(handleID, userID, mobileNo);
+      const loginResponse = await window.finvuClient.login(handleId, userID, mobileNo);
       console.log({loginResponse});
       // handle login success
     } catch (error) {
@@ -67,6 +79,50 @@ function App() {
     }
   };
 
+  const handleFetchDiscoveredAccounts = async () => {
+    const fipid = "fip@finrepo"; // Replace with actual FIP ID
+    const identifiers = [
+      {
+        category: "STRONG",
+        type: "MOBILE",
+        value: mobileNumber,
+      },
+      {
+        category: "WEAK",
+        type: "PAN",
+        value: panNumber,
+      }
+    ]
+
+    try {
+      const discoveredAccountsResponse = await window.finvuClient.discoverAccounts(fipid, identifiers);
+      console.log(discoveredAccountsResponse);
+      setDiscoveredAccounts(discoveredAccountsResponse.DiscoveredAccounts);
+    } catch (error) {
+      console.error('Failed to fetch discovered accounts', error);
+    }
+  };
+
+  const handleAccountLinking = async (account: any) => {
+    console.log({account})
+    const fipid = "fip@finrepo"; // Replace with actual FIP ID
+    let accountLinkRefNumbers;
+    // let token;
+    const token = otp
+    try {
+      const accountLinkingResponse = await window.finvuClient.accountLinking(fipid, account);
+      console.log(accountLinkingResponse);
+      console.log("refno", accountLinkingResponse.RefNumber)
+      accountLinkRefNumbers = accountLinkingResponse.RefNumber
+      // token = accountLinkingResponse.txnid
+      // handle account linking success
+      const confirmResponse = await window.finvuClient.accountConfirmLinking(accountLinkRefNumbers, token);
+        console.log(confirmResponse);
+    } catch (error) {
+      console.error('Account linking failed', error);
+    }
+  };
+
   return <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 gap-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 space-y-4">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Finvu</h1>
@@ -93,15 +149,33 @@ function App() {
       </div>
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 space-y-4">
         <Button onClick={handleFetchLinkedAccounts} className="w-full">User Linked Accounts</Button>
-        <ul>
-          {/* {linkedAccounts.map((account, index) => (
+        {/* <ul>
+          {linkedAccounts.map((account, index) => (
             <li key={index} className="border-b border-gray-300 py-2">
               <div><strong>User ID:</strong> {account.userId}</div>
               <div><strong>FIP Name:</strong> {account.fipName}</div>
               <div><strong>Masked Account Number:</strong> {account.maskedAccNumber}</div>
               <div><strong>Account Type:</strong> {account.accType}</div>
             </li>
-          ))} */}
+          ))}
+        </ul> */}
+         <Button onClick={handleFetchDiscoveredAccounts} className="w-full">Discover Accounts</Button>
+         <ul>
+          {discoveredAccounts.map((account, index) => (
+            <li key={index} className="flex justify-between mb-2">
+              <span>
+                {account.maskedAccNumber} - {account.accType}
+              </span>
+              
+            </li>
+
+          ))}
+          <Button
+                onClick={() => handleAccountLinking(discoveredAccounts)}
+                className="ml-4"
+              >
+                Link Account
+              </Button>
         </ul>
       </div>
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 space-y-4">
