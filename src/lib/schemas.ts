@@ -1,136 +1,122 @@
 import { z } from "zod";
 
+// Account Schema
+export const AccountSchema = z.object({
+  accType: z.string(),
+  accRefNumber: z.string(),
+  maskedAccNumber: z.string(),
+  FIType: z.string(),
+});
+export type Account = z.infer<typeof AccountSchema>;
+
+// FIPDetails Schema
+export const FIPDetailsSchema = z.object({
+  FIP: z.object({
+    id: z.string(),
+  }),
+  Accounts: z.array(AccountSchema),
+});
+export type FIPDetails = z.infer<typeof FIPDetailsSchema>;
+
 // Login Response
-const LoginResponseSchema = z.object({
-  loginResponse: z.object({
-    status: z.string(),
-    message: z.string()
-  })
+export const LoginResponseSchema = z.object({
+  status: z.string(),
+  message: z.string(),
 });
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 
 // Verify OTP Response
-const VerifyOtpResponseSchema = z.object({
+export const VerifyOtpResponseSchema = z.object({
   status: z.string(),
-  message: z.string()
+  message: z.string(),
 });
 export type VerifyOtpResponse = z.infer<typeof VerifyOtpResponseSchema>;
 
 // Logout Response
-const LogoutResponseSchema = z.object({
+export const LogoutResponseSchema = z.object({
   status: z.string(),
-  message: z.string()
+  message: z.string(),
 });
 export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
 
 // User Linked Accounts Response
-const UserLinkedAccountsResponseSchema = z.object({
-  LinkedAccounts: z.array(z.object({
-    userId: z.string(),
-    fipId: z.string(),
-    fipName: z.string(),
-    maskedAccNumber: z.string(),
-    accRefNumber: z.string(),
-    accType: z.string(),
-    AuthenticatorType: z.string()
-  })),
+export const UserLinkedAccountsResponseSchema = z.object({
+  LinkedAccounts: z.array(
+    z.object({
+      userId: z.string(),
+      fipId: z.string(),
+      fipName: z.string(),
+      maskedAccNumber: z.string(),
+      accRefNumber: z.string(),
+      accType: z.string(),
+      AuthenticatorType: z.string(),
+    })
+  ),
   status: z.string(),
-  message: z.string().nullable()
+  message: z.string().nullable(),
 });
-export type UserLinkedAccountsResponse = z.infer<typeof UserLinkedAccountsResponseSchema>;
+export type UserLinkedAccountsResponse = z.infer<
+  typeof UserLinkedAccountsResponseSchema
+>;
 
 // Discover Accounts Response
-const DiscoverAccountsResponseSchema = z.object({
-  DiscoveredAccounts: z.array(z.object({
-    accType: z.string(),
-    accRefNumber: z.string(),
-    maskedAccNumber: z.string(),
-    FIType: z.string()
-  })),
+export const DiscoverAccountsResponseSchema = z.object({
+  DiscoveredAccounts: z.array(AccountSchema),
   status: z.string(),
-  message: z.string().nullable()
+  message: z.string().nullable(),
 });
-export type DiscoverAccountsResponse = z.infer<typeof DiscoverAccountsResponseSchema>;
+export type DiscoverAccountsResponse = z.infer<
+  typeof DiscoverAccountsResponseSchema
+>;
 
 // Account Linking Response
-const AccountLinkingResponseSchema = z.object({
-  AuthenticatorType: z.string(),
+export const AccountLinkingResponseSchema = z.object({
   RefNumber: z.string(),
   message: z.string().nullable(),
   status: z.string(),
-  timestamp: z.string(),
-  txnid: z.string(),
-  ver: z.string()
 });
-export type AccountLinkingResponse = z.infer<typeof AccountLinkingResponseSchema>;
+export type AccountLinkingResponse = z.infer<
+  typeof AccountLinkingResponseSchema
+>;
 
 // Account Confirm Linking Response
-const AccountConfirmLinkingResponseSchema = z.object({
+export const AccountConfirmLinkingResponseSchema = z.object({
   status: z.string(),
-  message: z.string()
+  message: z.string(),
 });
-export type AccountConfirmLinkingResponse = z.infer<typeof AccountConfirmLinkingResponseSchema>;
+export type AccountConfirmLinkingResponse = z.infer<
+  typeof AccountConfirmLinkingResponseSchema
+>;
 
-const ConsentApproveRequestSchema = z.object({
-    status: z.string(),
-    message: z.string().nullable(),
-    consentId: z.string().nullable(),
-    ver: z.string(),
-    txnid: z.string(),
-    consentStatus: z.string().nullable(),
-    createTime: z.string().nullable(),
-    startTime: z.string(),
-    expireTime: z.string(),
-    statusLastupdateTimestamp: z.string().nullable(),
-    FIP: z.any().nullable(),
-    AA: z.object({
-      id: z.string(),
-    }),
-    FIU: z.object({
-      id: z.string(),
-      name: z.string(),
-    }),
-    User: z.object({
-      idTypes: z.string(),
-      id: z.string(),
-    }),
-    Accounts: z.any().nullable(),
-    ConsentUse: z.any().nullable(),
-    DataAccess: z.any().nullable(),
-    Purpose: z.object({
-      code: z.string(),
-      refUri: z.string(),
-      text: z.string(),
-      Category: z.object({
-        type: z.string(),
-      }),
-    }),
-    Signature: z.any().nullable(),
-    mode: z.string(),
-    fetchType: z.string(),
-    consentTypes: z.array(z.string()),
-    consentDisplayDescriptions: z.array(z.string()),
-    fiTypes: z.array(z.string()),
-    DataDateTimeRange: z.object({
-      from: z.string(),
-      to: z.string(),
-    }),
-    DataLife: z.object({
-      unit: z.string(),
-      value: z.number(),
-    }),
-    Frequency: z.object({
-      unit: z.string(),
-      value: z.number(),
-    }),
-    DataFilter: z.array(
-      z.object({
-        type: z.string(),
-        operator: z.string(),
-        value: z.string(),
-      })
-    ),
-    consentDetailDigitalSignature: z.any().nullable(),
-    ConsentHandle: z.string(),
-  });
-  export type ConsentApproveRequest = z.infer<typeof ConsentApproveRequestSchema>;
+// Consent Approve Request
+export const ConsentApproveRequestSchema = z.object({
+  status: z.string(),
+  message: z.string(),
+});
+
+export type ConsentApproveRequest = z.infer<typeof ConsentApproveRequestSchema>;
+
+export const LinkedAccountSchema = z.object({
+  userId: z.string(),
+  fipId: z.string(),
+  fipName: z.string(),
+  maskedAccNumber: z.string(),
+  accRefNumber: z.string(),
+  linkRefNumber: z.string().optional(),
+  consentIdList: z.array(z.any()).nullable().optional(), // Assuming consentIdList could be an array or null
+  FIType: z.string().optional(),
+  accType: z.string(),
+  linkedAccountUpdateTimestamp: z.string().optional(), // You can parse this to a Date if needed
+  AuthenticatorType: z.string(),
+});
+
+export const LinkedAccountsResponseSchema = z.object({
+  status: z.string(),
+  message: z.string().nullable(),
+  LinkedAccounts: z.array(LinkedAccountSchema),
+});
+
+export type LinkedAccount = z.infer<typeof LinkedAccountSchema>;
+export type LinkedAccountsResponse = z.infer<
+  typeof LinkedAccountsResponseSchema
+>;
