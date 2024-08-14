@@ -13,6 +13,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "./components/ui/card";
 import {
   checkAndLink,
+  handleConsentApproval,
   handleLinking,
   handleLogin,
   handleVerifyOtpAndAccounts,
@@ -30,14 +31,18 @@ function App() {
 
   const [otp, setOtp] = useState<string>("");
   const [otp2, setOtp2] = useState<string>("");
+  const [otp3, setOtp3] = useState<string>("");
   const [accountLinkRefNumbers, setAccountLinkRefNumbers] =
     useState<string>("");
   const [linkedAccounts, setLinkedAccounts] = useState<
     LinkedAccountsResponse["LinkedAccounts"]
   >([]);
-  const [isFip1, setIsFip] = useState<boolean>(false);
+  const [isFip1, setIsFip1] = useState<boolean>(false);
   const [isFip2, setIsFip2] = useState<boolean>(false);
   const [sendSecondOtp, setSendSecondOtp] = useState<boolean>(false);
+
+  const setFip1True = () => setIsFip1(true);
+  const setFip2True = () => setIsFip2(true);
 
   useEffect(() => {
     window.finvuClient.open();
@@ -46,82 +51,89 @@ function App() {
   }, [handleId, mobileNumber]);
 
   useEffect(() => {
-    if (otp.length === 6) {
-      handleVerifyOtpAndAccounts(
-        otp,
-        fipId,
-        fipId2,
-        panNumber,
-        mobileNumber,
-        // linkedAccounts,
-        setLinkedAccounts,
-        setAccountLinkRefNumbers,
-        setIsFip,
-        setIsFip2
-      );
-      setOtp("");
-    }
-    if (otp2.length === 8) {
-      handleLinking(otp2, accountLinkRefNumbers, setLinkedAccounts);
-      setOtp2("");
-    }
-  }, [accountLinkRefNumbers, mobileNumber, otp, otp2, panNumber, isFip2]);
+    const handleOtpProcessing = async () => {
+      if (otp.length === 6) {
+        const responsne = await handleVerifyOtpAndAccounts(
+          otp,
+          fipId,
+          fipId2,
+          panNumber,
+          mobileNumber,
+          setLinkedAccounts,
+          setAccountLinkRefNumbers,
+          setIsFip1,
+          setIsFip2
+        );
+        setOtp("");
+        console.log({ responsne });
+        if (!responsne) {
+          await checkAndLink(
+            fipId2,
+            panNumber,
+            mobileNumber,
+            true,
+            setAccountLinkRefNumbers,
+            setIsFip2
+          );
+        } else {
+          setIsFip1(true);
+        }
+      }
+
+      if (otp2.length === 8) {
+        await handleLinking(otp2, accountLinkRefNumbers, setLinkedAccounts);
+        setOtp2("");
+        // Check the conditions after the async operation completes
+        console.log("fipId:", isFip1, "fipId2:", isFip2);
+        if (!isFip2) {
+          console.log("Linked Accounts:", linkedAccounts);
+          handleConsentApproval(linkedAccounts, "ACCEPT");
+        } else {
+          await checkAndLink(
+            fipId2,
+            panNumber,
+            mobileNumber,
+            true,
+            setAccountLinkRefNumbers,
+            setIsFip2
+          );
+          setIsFip1(false);
+        }
+      }
+
+      if (otp3.length === 8) {
+        await handleLinking(otp3, accountLinkRefNumbers, setLinkedAccounts);
+        setOtp3("");
+        // Check the conditions after the async operation completes
+        console.log("fipId:", isFip1, "fipId2:", isFip2);
+        if (!isFip1) {
+          console.log("Linked Accounts:", linkedAccounts);
+          handleConsentApproval(linkedAccounts, "ACCEPT");
+        }
+      }
+    };
+
+    handleOtpProcessing();
+  }, [
+    accountLinkRefNumbers,
+    mobileNumber,
+    otp,
+    otp2,
+    otp3,
+    panNumber,
+    linkedAccounts,
+    isFip1,
+    isFip2,
+  ]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 gap-4">
-      {accountLinkRefNumbers ? (
-        {isFip1 && ()}
-        <Card className="w-full max-w-md ">
+      {isFip1 && accountLinkRefNumbers && (
+        <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>
-              Enter OTP recieved from {fipId}
-            </CardTitle>
+            <CardTitle>Enter OTP received from {fipId}</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* <Button onClick={handleFetchLinkedAccounts} className="w-full mt-6">
-            User Linked Accounts
-          </Button> */}
-
-            {/* <ul className="w-full ">
-            {linkedAccounts.map((account, index) => (
-              <li key={index} className="border-b border-gray-300 py-2">
-                <div>
-                  <strong>User ID:</strong> {account.userId}
-                </div>
-                <div>
-                  <strong>FIP Name:</strong> {account.fipName}
-                </div>
-                <div>
-                  <strong>Masked Account Number:</strong>{" "}
-                  {account.maskedAccNumber}
-                </div>
-                <div>
-                  <strong>Account Type:</strong> {account.accType}
-                </div>
-              </li>
-            ))}
-          </ul> */}
-            {/* <Button
-              onClick={handleFetchDiscoveredAccounts}
-              className="w-full mt-4"
-            >
-              Discover Accounts
-            </Button> */}
-            {/* <ul className="w-full mt-4">
-            {discoveredAccounts.map((account, index) => (
-              <li key={index} className="flex justify-between mb-2">
-                <span>
-                  {account.maskedAccNumber} - {account.accType}
-                </span>
-              </li>
-            ))}
-          </ul> */}
-            {/* <Button
-            onClick={() => handleAccountLinking(discoveredAccounts)}
-            className="w-full mt-4"
-          >
-            Link Account
-          </Button> */}
             <div className="flex flex-col items-center">
               <InputOTP maxLength={8} value={otp2} onChange={setOtp2}>
                 <InputOTPGroup>
@@ -136,26 +148,33 @@ function App() {
                 </InputOTPGroup>
               </InputOTP>
             </div>
-            {/* <Button onClick={handleLinking} className="w-full mt-2">
-            Confirm Account
-          </Button> */}
-            {/* <div className="flex justify-between mt-4">
-              <Button
-                onClick={() => handleConsentApproval("ACCEPT")}
-                className="w-1/2 mr-2"
-              >
-                Accept
-              </Button>
-              <Button
-                onClick={() => handleConsentApproval("DENY")}
-                className="w-1/2 ml-2"
-              >
-                Deny
-              </Button>
-            </div> */}
           </CardContent>
         </Card>
-      ) : (
+      )}{" "}
+      {isFip2 && !isFip1 && accountLinkRefNumbers && (
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Enter OTP received from {fipId2}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center">
+              <InputOTP maxLength={8} value={otp3} onChange={setOtp3}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} className="w-12" />
+                  <InputOTPSlot index={1} className="w-12" />
+                  <InputOTPSlot index={2} className="w-12" />
+                  <InputOTPSlot index={3} className="w-12" />
+                  <InputOTPSlot index={4} className="w-12" />
+                  <InputOTPSlot index={5} className="w-12" />
+                  <InputOTPSlot index={6} className="w-12" />
+                  <InputOTPSlot index={7} className="w-12" />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {!isFip1 && !isFip2 && (
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Enter OTP</CardTitle>
@@ -176,7 +195,6 @@ function App() {
           </CardContent>
         </Card>
       )}
-
       {/* <Card className="w-full max-w-md">
         <CardFooter>
           <Button onClick={handleLogout} className="w-full mt-6">

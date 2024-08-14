@@ -75,7 +75,7 @@ export const checkAndLink = async (
   mobileNumber: string,
   link: boolean,
   setAccountLinkRefNumbers: React.Dispatch<React.SetStateAction<string>>,
-  setSendSecondOtp: React.Dispatch<React.SetStateAction<boolean>>
+  setIsFip2: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const identifiers = [
     {
@@ -114,6 +114,7 @@ export const checkAndLink = async (
 
     console.log({ unlinkedAccounts });
     if (unlinkedAccounts.length > 0) {
+      console.log({ link });
       if (link) {
         const accountLinkingResponse = await window.finvuClient.accountLinking(
           fipId,
@@ -122,7 +123,7 @@ export const checkAndLink = async (
         console.log(accountLinkingResponse);
         console.log("refno", accountLinkingResponse.RefNumber);
         setAccountLinkRefNumbers(accountLinkingResponse.RefNumber);
-        setSendSecondOtp(true);
+        setIsFip2(true);
       }
       return true;
     } else {
@@ -142,9 +143,10 @@ export const handleVerifyOtpAndAccounts = async (
   // linkedAccounts: LinkedAccount[],
   setLinkedAccounts: (accounts: LinkedAccount[]) => void,
   setAccountLinkRefNumbers: React.Dispatch<React.SetStateAction<string>>,
-  setIsFip: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsFip1: React.Dispatch<React.SetStateAction<boolean>>,
   setIsFip2: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
+  console.log("setisfip", setIsFip1);
   const identifiers = [
     {
       category: "STRONG",
@@ -192,10 +194,10 @@ export const handleVerifyOtpAndAccounts = async (
       console.log(accountLinkingResponse);
       console.log("refno", accountLinkingResponse.RefNumber);
       setAccountLinkRefNumbers(accountLinkingResponse.RefNumber);
-      setIsFip(true);
+      return true;
     }
 
-    const response = checkAndLink(
+    const response = await checkAndLink(
       fipId2,
       panNumber,
       mobileNumber,
@@ -203,16 +205,19 @@ export const handleVerifyOtpAndAccounts = async (
       setAccountLinkRefNumbers,
       setIsFip2
     );
+    console.log({ response });
+    console.log(unlinkedAccounts.length);
     if (!response && !(unlinkedAccounts.length > 0)) {
       handleConsentApproval(linkedAccountsResponse.LinkedAccounts, "ACCEPT");
     }
+    return false;
   } catch (error) {
     console.error("OTP verification failed", error);
   }
 };
 
 export const handleLinking = async (
-  otp2: string,
+  otp: string,
   accountLinkRefNumbers: string,
   setLinkedAccounts: (accounts: LinkedAccount[]) => void
 ) => {
@@ -220,7 +225,7 @@ export const handleLinking = async (
   try {
     const confirmResponse = await window.finvuClient.accountConfirmLinking(
       accountLinkRefNumbers,
-      otp2
+      otp
     );
     console.log(confirmResponse);
 
@@ -229,7 +234,7 @@ export const handleLinking = async (
     console.log(linkedAccountsResponse);
     setLinkedAccounts(linkedAccountsResponse.LinkedAccounts);
 
-    handleConsentApproval(linkedAccountsResponse.LinkedAccounts, "ACCEPT");
+    // handleConsentApproval(linkedAccountsResponse.LinkedAccounts, "ACCEPT");
   } catch (error) {
     console.error("Failed to fetch linked accounts", error);
   }
