@@ -4,9 +4,11 @@ import {
   Account,
   AccountConfirmLinkingResponse,
   AccountLinkingResponse,
+  ConsentResponse,
   DiscoverAccountsResponse,
-  LinkedAccount,
+  FIPDetails,
   LoginResponse,
+  UpdateAccountLinkRefNumbers,
   UserLinkedAccountsResponse,
   VerifyOtpResponse,
 } from "./schemas";
@@ -41,14 +43,7 @@ declare global {
       consentApproveRequest: (
         FIPDetails: Array<FIPDetails>,
         handleStatus: "ACCEPT" | "DENY"
-      ) => Promise<any>;
-      consentDetails: () => Promise<any>;
-      consentHistory: () => Promise<any>;
-      consentDetailsList: (consentId: string) => Promise<any>;
-      consentRequestDetailsEnc: () => Promise<any>;
-      consentRequestDetailsEncList: () => Promise<any>;
-
-      consentRequestDetails: () => Promise<any>;
+      ) => Promise<ConsentResponse>;
     };
   }
 }
@@ -69,13 +64,26 @@ export const handleLogin = async (handleId: string, mobileNumber: string) => {
   }
 };
 
-export const checkAndLink = async (
+export const handleVerify = async (
+  otp: string
+): Promise<[boolean, string | undefined]> => {
+  try {
+    const verifyResponse = await window.finvuClient.verifyOTP(otp);
+    console.log(verifyResponse);
+    if (verifyResponse.status === "FAILURE") {
+      return [false, verifyResponse.message];
+    }
+    return [true, undefined];
+  } catch (error) {
+    console.error("OTP verification failed", error);
+    return [false, error as string];
+  }
+};
+
+export const checkAccounts = async (
   fipId: string,
   panNumber: string,
-  mobileNumber: string,
-  link: boolean,
-  setAccountLinkRefNumbers: React.Dispatch<React.SetStateAction<string>>,
-  setIsFip2: React.Dispatch<React.SetStateAction<boolean>>
+  mobileNumber: string
 ) => {
   const identifiers = [
     {
@@ -90,12 +98,15 @@ export const checkAndLink = async (
     },
   ];
   try {
-    console.log("urrrtx");
+    // const verifyResponse = await window.finvuClient.verifyOTP(otp);
+    // console.log(verifyResponse);
     const linkedAccountsResponse =
       await window.finvuClient.userLinkedAccounts();
     console.log(linkedAccountsResponse);
 
     const linkedAccounts = linkedAccountsResponse.LinkedAccounts;
+    console.log({ fipId });
+    console.log({ identifiers });
     const discoveredAccountsResponse =
       await window.finvuClient.discoverAccounts(fipId, identifiers);
     console.log(discoveredAccountsResponse);
@@ -114,39 +125,27 @@ export const checkAndLink = async (
 
     console.log({ unlinkedAccounts });
     if (unlinkedAccounts.length > 0) {
-      console.log({ link });
-      if (link) {
-        const accountLinkingResponse = await window.finvuClient.accountLinking(
-          fipId,
-          unlinkedAccounts
-        );
-        console.log(accountLinkingResponse);
-        console.log("refno", accountLinkingResponse.RefNumber);
-        setAccountLinkRefNumbers(accountLinkingResponse.RefNumber);
-        setIsFip2(true);
-      }
-      return true;
-    } else {
-      return false;
+      // const accountLinkingResponse = await window.finvuClient.accountLinking(
+      //   fipId,
+      //   unlinkedAccounts
+      // );
+      // console.log(accountLinkingResponse);
+      // console.log("refno", accountLinkingResponse.RefNumber);
+      // updateAccountLinkRefNumbers(accountLinkingResponse.RefNumber);
+      return { hasUnlinkedAccounts: true };
     }
+    return { hasUnlinkedAccounts: false };
   } catch (error) {
-    console.error("OTP verification failed", error);
+    console.error("Checking accounts failed", error);
   }
 };
 
-export const handleVerifyOtpAndAccounts = async (
-  otp: string,
+export const sendOtp = async (
   fipId: string,
-  fipId2: string,
   panNumber: string,
   mobileNumber: string,
-  // linkedAccounts: LinkedAccount[],
-  setLinkedAccounts: (accounts: LinkedAccount[]) => void,
-  setAccountLinkRefNumbers: React.Dispatch<React.SetStateAction<string>>,
-  setIsFip1: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsFip2: React.Dispatch<React.SetStateAction<boolean>>
+  updateAccountLinkRefNumbers: UpdateAccountLinkRefNumbers
 ) => {
-  console.log("setisfip", setIsFip1);
   const identifiers = [
     {
       category: "STRONG",
@@ -160,14 +159,12 @@ export const handleVerifyOtpAndAccounts = async (
     },
   ];
   try {
-    const verifyResponse = await window.finvuClient.verifyOTP(otp);
-    console.log(verifyResponse);
-
+    // const verifyResponse = await window.finvuClient.verifyOTP(otp);
+    // console.log(verifyResponse);
     const linkedAccountsResponse =
       await window.finvuClient.userLinkedAccounts();
     console.log(linkedAccountsResponse);
 
-    setLinkedAccounts(linkedAccountsResponse.LinkedAccounts);
     const linkedAccounts = linkedAccountsResponse.LinkedAccounts;
     const discoveredAccountsResponse =
       await window.finvuClient.discoverAccounts(fipId, identifiers);
@@ -193,22 +190,8 @@ export const handleVerifyOtpAndAccounts = async (
       );
       console.log(accountLinkingResponse);
       console.log("refno", accountLinkingResponse.RefNumber);
-      setAccountLinkRefNumbers(accountLinkingResponse.RefNumber);
+      updateAccountLinkRefNumbers(accountLinkingResponse.RefNumber);
       return true;
-    }
-
-    const response = await checkAndLink(
-      fipId2,
-      panNumber,
-      mobileNumber,
-      false,
-      setAccountLinkRefNumbers,
-      setIsFip2
-    );
-    console.log({ response });
-    console.log(unlinkedAccounts.length);
-    if (!response && !(unlinkedAccounts.length > 0)) {
-      handleConsentApproval(linkedAccountsResponse.LinkedAccounts, "ACCEPT");
     }
     return false;
   } catch (error) {
@@ -218,8 +201,7 @@ export const handleVerifyOtpAndAccounts = async (
 
 export const handleLinking = async (
   otp: string,
-  accountLinkRefNumbers: string,
-  setLinkedAccounts: (accounts: LinkedAccount[]) => void
+  accountLinkRefNumbers: string
 ) => {
   console.log({ accountLinkRefNumbers });
   try {
@@ -232,16 +214,17 @@ export const handleLinking = async (
     const linkedAccountsResponse =
       await window.finvuClient.userLinkedAccounts();
     console.log(linkedAccountsResponse);
-    setLinkedAccounts(linkedAccountsResponse.LinkedAccounts);
+
+    return true;
 
     // handleConsentApproval(linkedAccountsResponse.LinkedAccounts, "ACCEPT");
   } catch (error) {
     console.error("Failed to fetch linked accounts", error);
+    return false;
   }
 };
 
 export const handleConsentApproval = async (
-  linkedAccounts: LinkedAccount[],
   // fipId: string,
   status: "ACCEPT" | "DENY"
 ) => {
@@ -252,24 +235,28 @@ export const handleConsentApproval = async (
   // );
   // console.dir(filteredLinkedAccounts, { depth: null });
 
-  const FIPDetails = linkedAccounts.map((account) => ({
-    FIP: {
-      id: account.fipId,
-    },
-    Accounts: [
-      {
-        linkRefNumber: account.linkRefNumber,
-        accType: account.accType,
-        accRefNumber: account.accRefNumber,
-        maskedAccNumber: account.maskedAccNumber,
-        FIType: account.FIType,
-        fipId: account.fipId,
-        fipName: account.fipName,
-      },
-    ],
-  }));
-
   try {
+    const linkedAccountsResponse =
+      await window.finvuClient.userLinkedAccounts();
+    console.log(linkedAccountsResponse);
+
+    const FIPDetails = linkedAccountsResponse.LinkedAccounts.map((account) => ({
+      FIP: {
+        id: account.fipId,
+      },
+      Accounts: [
+        {
+          linkRefNumber: account.linkRefNumber,
+          accType: account.accType,
+          accRefNumber: account.accRefNumber,
+          maskedAccNumber: account.maskedAccNumber,
+          FIType: account.FIType,
+          fipId: account.fipId,
+          fipName: account.fipName,
+        },
+      ],
+    }));
+
     const consentResponse = await window.finvuClient.consentApproveRequest(
       FIPDetails,
       status
@@ -277,7 +264,10 @@ export const handleConsentApproval = async (
     console.log(consentResponse);
     const consentId = consentResponse.fipConsentInfos[0].consentId;
     console.log("consentId", consentId);
+
+    return true;
   } catch (error) {
     console.error(`Consent ${status.toLowerCase()} failed`, error);
+    return false;
   }
 };

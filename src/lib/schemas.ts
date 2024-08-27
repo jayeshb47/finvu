@@ -47,6 +47,8 @@ export const UserLinkedAccountsResponseSchema = z.object({
       fipId: z.string(),
       fipName: z.string(),
       maskedAccNumber: z.string(),
+      linkRefNumber: z.string(),
+      FIType: z.string(),
       accRefNumber: z.string(),
       accType: z.string(),
       AuthenticatorType: z.string(),
@@ -120,3 +122,26 @@ export type LinkedAccount = z.infer<typeof LinkedAccountSchema>;
 export type LinkedAccountsResponse = z.infer<
   typeof LinkedAccountsResponseSchema
 >;
+
+export type UpdateAccountLinkRefNumbers = (refNumber: string) => void;
+
+export type FipCheckResult = {
+  hasUnlinkedAccounts: boolean;
+  // other relevant data
+};
+
+// Schema for the response
+export const FipConsentInfoSchema = z.object({
+  fipId: z.string().nullable(), // fipId can be null
+  consentId: z.string(),
+});
+
+export const ConsentResponseSchema = z.object({
+  fipConsentInfos: z.array(FipConsentInfoSchema),
+  consentIntentId: z.string(),
+  status: z.string(),
+  message: z.string(),
+});
+
+// Type inference
+export type ConsentResponse = z.infer<typeof ConsentResponseSchema>;
