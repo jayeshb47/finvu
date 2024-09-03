@@ -55,7 +55,7 @@ export const UserLinkedAccountsResponseSchema = z.object({
     })
   ),
   status: z.string(),
-  message: z.string().nullable(),
+  message: z.string(),
 });
 export type UserLinkedAccountsResponse = z.infer<
   typeof UserLinkedAccountsResponseSchema
@@ -65,7 +65,7 @@ export type UserLinkedAccountsResponse = z.infer<
 export const DiscoverAccountsResponseSchema = z.object({
   DiscoveredAccounts: z.array(AccountSchema),
   status: z.string(),
-  message: z.string().nullable(),
+  message: z.string(),
 });
 export type DiscoverAccountsResponse = z.infer<
   typeof DiscoverAccountsResponseSchema
@@ -145,3 +145,18 @@ export const ConsentResponseSchema = z.object({
 
 // Type inference
 export type ConsentResponse = z.infer<typeof ConsentResponseSchema>;
+
+const LoginOrVerifySchema = z.object({
+  action: z.string(),
+  handleId: z.string().optional(),
+  mobileNumber: z.string().optional(),
+  otp: z.string().optional(),
+});
+
+export type LoginOrVerify = z.infer<typeof LoginOrVerifySchema>;
+
+export const ErrorSchema = z.object({
+  message: z.string(),
+});
+
+export type ErrorType = z.infer<typeof ErrorSchema>;

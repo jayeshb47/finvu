@@ -6,22 +6,63 @@ import {
   InputOTPSlot,
 } from "./components/ui/input-otp";
 import { Card, CardHeader, CardTitle, CardContent } from "./components/ui/card";
-import {
-  handleConsentApproval,
-  handleLinking,
-  handleLogin,
-  handleVerify,
-  checkAccounts,
-  sendOtp,
-} from "./lib/utils";
-import { useMachine } from "@xstate/react";
+import { useActorRef, useSelector } from "@xstate/react";
 import { machine } from "./lib/machines/firstmachine";
 import { LoadingSpinner } from "./components/ui/loading-spinner";
+import type { ActorOptions, AnyActorLogic } from "xstate";
 
-function App() {
-  const [state, sendTo] = useMachine(machine);
+interface Props {
+  actorOptions: ActorOptions<AnyActorLogic> | undefined;
+}
+const App: React.FC<Props> = ({ actorOptions }) => {
+  const actorRef = useActorRef(machine, actorOptions);
+  // const [errorMessage, setErrorMessage] = useState("");
+  const screenToRender = useSelector(actorRef, (state) => {
+    console.log("the top console", state);
+    if (
+      state.matches("Sending Login Otp") ||
+      state.matches({ "Entering login otp": "SUBMITTING" }) ||
+      state.matches({ "Verify FIP IDs": "CHECK_NEXT_FIP" }) ||
+      state.matches({
+        "Verify FIP IDs": { "Verify Otp for FIP": "SUBMITTING" },
+      }) ||
+      state.matches({
+        "Verify FIP IDs": { "Verify Otp for FIP": "CHECK_AND_SEND_OTP" },
+      })
+    ) {
+      return "loading" as const;
+    }
+    if (state.matches("Entering login otp")) {
+      return "login" as const;
+    }
 
-  const currentFipId = state.context.fipIds[state.context.currentFipIndex];
+    if (
+      state.matches({
+        "Verify FIP IDs": { "Verify Otp for FIP": "WAIT_FOR_OTP" },
+      })
+    ) {
+      return "fipLogin" as const;
+    }
+
+    if (state.matches("Handle Consent")) {
+      return "consent" as const;
+    }
+
+    throw new Error(
+      `Reached an unreachable state: ${JSON.stringify(state.value)}`
+    );
+  });
+
+  const errorMessage = useSelector(actorRef, (state) => {
+    if (state.context.error !== undefined) {
+      console.log("Error: ", state.context.error);
+      return state.context.error as string;
+    }
+  });
+  const fipName = useSelector(actorRef, (state) => {
+    return state.context.fipIds[state.context.currentFipIndex];
+  });
+
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const mobileNumber = queryParams.get("mobileNumber") || "";
@@ -30,126 +71,36 @@ function App() {
 
   const [otp, setOtp] = useState<string>("");
   const [otp2, setOtp2] = useState<string>("");
-  const [error, setError] = useState<string>("");
-
-  const [accountLinkRefNumbers, setAccountLinkRefNumbers] =
-    useState<string>("");
-
-  const updateAccountLinkRefNumbers = (refNumber: string) => {
-    setAccountLinkRefNumbers(refNumber);
-    console.log({ accountLinkRefNumbers });
-  };
-
   useEffect(() => {
     window.finvuClient.open();
     console.log(window.finvuClient);
-    handleLogin(handleId, mobileNumber);
+    actorRef.send({ type: "send.otp", handleId, mobileNumber, panNumber });
   }, [handleId, mobileNumber]);
-
-  const linkAccount = async () => {
-    console.log("in link account", accountLinkRefNumbers);
-    const response = await handleLinking(otp2, accountLinkRefNumbers);
-
-    if (!response) {
-      sendTo({ type: "ERROR_OTP" });
-    } else {
-      sendTo({ type: "VERIFY_OTP" });
-    }
-  };
-
-  const handleOtpSubmit1 = async () => {
-    const [otpVerified, error] = await handleVerify(otp);
-    if (!otpVerified) {
-      setError(error || "");
-      sendTo({ type: "ERROR_OTP" });
-    } else {
-      setError("");
-      sendTo({ type: "VERIFY_OTP" });
-    }
-  };
-
-  const checkFip = async () => {
-    const response = await checkAccounts(
-      currentFipId as string,
-      panNumber,
-      mobileNumber
-    );
-
-    if (response?.hasUnlinkedAccounts) {
-      sendFipOtp();
-    } else {
-      sendTo({ type: "NO_LINKED_ACCOUNTS" });
-    }
-  };
-
-  const sendFipOtp = async () => {
-    const response = await sendOtp(
-      currentFipId as string,
-      panNumber,
-      mobileNumber,
-      updateAccountLinkRefNumbers
-    );
-    if (!response) {
-      sendTo({ type: "ERROR_SENDING_OTP" });
-    } else {
-      sendTo({ type: "SENT_OTP" });
-    }
-  };
-
-  const consentSend = async () => {
-    const response = await handleConsentApproval("ACCEPT");
-
-    if (!response) {
-      sendTo({ type: "ERROR_CONSENT" });
-    } else {
-      sendTo({ type: "CONSENT_DONE" });
-    }
-  };
 
   useEffect(() => {
     if (otp.length === 6) {
-      if (state.matches({ "Entering login otp": "idle" })) {
-        console.log("hii");
-        sendTo({ type: "SUBMIT_OTP" });
-        handleOtpSubmit1();
-      }
-
+      console.log("hii", otp);
+      actorRef.send({ type: "submit.otp", otp });
       setOtp("");
     }
 
     if (otp2.length === 8) {
-      if (
-        state.matches({ "Verify FIP IDs": { verifyOtpForFip: "waitForOtp" } })
-      ) {
-        sendTo({ type: "SUBMIT_OTP" });
-        linkAccount();
-      }
+      console.log("otp2", otp2);
+      actorRef.send({ type: "submit.otp", otp: otp2 });
 
       setOtp2("");
     }
-  }, [otp, otp2, sendTo, state]);
-
-  useEffect(() => {
-    if (state.matches({ "Verify FIP IDs": { verifyOtpForFip: "sendOtp" } })) {
-      checkFip();
-    }
-    if (state.matches({ "Handle Consent": "idle" })) {
-      consentSend();
-    }
-  }, [state]);
+  }, [otp, otp2]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 gap-4">
-      {JSON.stringify(state.value)} | {JSON.stringify(currentFipId)}
-      <div className="text-red-500">{error}</div>
-      {state.matches({
-        "Verify FIP IDs": { verifyOtpForFip: "waitForOtp" },
-      }) && (
+      {JSON.stringify(screenToRender)} |{" "}
+      {JSON.stringify(actorRef.getSnapshot().value)}
+      <div className="text-red-500">{errorMessage}</div>
+      {screenToRender === "fipLogin" && (
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>
-              Enter OTP received from {currentFipId as string}
-            </CardTitle>
+            <CardTitle>Enter OTP received from {fipName as string}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center">
@@ -169,7 +120,7 @@ function App() {
           </CardContent>
         </Card>
       )}
-      {state.matches({ "Entering login otp": "idle" }) && (
+      {screenToRender === "login" && (
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Enter OTP</CardTitle>
@@ -190,26 +141,10 @@ function App() {
           </CardContent>
         </Card>
       )}
-      {state.matches({ "Entering login otp": "submitting" }) ||
-        state.matches({
-          "Verify FIP IDs": { verifyOtpForFip: "submitting" },
-        }) ||
-        state.matches({
-          "Verify FIP IDs": { verifyOtpForFip: "sendOtp" },
-        }) ||
-        (state.matches({ "Handle Consent": "idle" }) && <LoadingSpinner />)}
-      {state.matches({ "Handle Consent": "complete" }) && (
-        <div className="h1">consent sent</div>
-      )}
-      {/* <Card className="w-full max-w-md">
-        <CardFooter>
-          <Button onClick={handleLogout} className="w-full mt-6">
-            Logout
-          </Button>
-        </CardFooter>
-      </Card> */}
+      {screenToRender === "loading" && <LoadingSpinner />}
+      {screenToRender === "consent" && <h1 className="">consent sent</h1>}
     </div>
   );
-}
+};
 
 export default App;
