@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
   setup,
   fromPromise,
@@ -10,7 +11,6 @@ import {
   handleConsentApproval,
   handleLinking,
   handleLoginOrVerify,
-  handleVerification,
   sendOtp,
 } from "../utils";
 import { ErrorSchema, ErrorType } from "../schemas";
@@ -268,6 +268,7 @@ export const machine = setup({
                 },
                 onError: {
                   actions: assign({
+                    // @ts-ignore
                     error: ({ event }) => event.error.message,
                   }),
                 },
@@ -307,6 +308,7 @@ export const machine = setup({
                   target: "CHECK_AND_SEND_OTP",
 
                   actions: assign({
+                    // @ts-ignore
                     error: ({ event }) => event.error.message,
                   }),
 
@@ -340,6 +342,7 @@ export const machine = setup({
             },
             onError: {
               target: "SEND_CONSENT",
+              // @ts-ignore
               actions: assign({ error: ({ event }) => event.error.nessage }),
             },
             src: "handleConsent",
@@ -381,6 +384,7 @@ export const machine = setup({
             }),
             onError: {
               target: "IDLE",
+              // @ts-ignore
               actions: assign({ error: ({ event }) => event.error.message }),
             },
 
