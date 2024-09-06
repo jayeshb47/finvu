@@ -13,6 +13,7 @@ import { Button } from "./components/ui/button";
 import LoadingScreen from "./components/LoadingScreen";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import ErrorScreen from "./components/ErrorScreen";
 
 interface Props {
   actorOptions: ActorOptions<AnyActorLogic> | undefined;
@@ -112,7 +113,12 @@ const App: React.FC<Props> = ({ actorOptions }) => {
 
   return (
     <>
-      {screenToRender === "loading" && <LoadingScreen title={loadingTitle} />}
+      {screenToRender === "loading" && (
+        // (errorMessage ? (
+        //   <ErrorScreen errorMessage={errorMessage} />
+        // ) : (
+        <LoadingScreen title={loadingTitle} errorMessage={errorMessage} />
+      )}
       {screenToRender != "loading" && (
         <div className="flex flex-col min-h-screen bg-white">
           <div className="bg-gradient-to-r from-[#1A73E9]/25 to-[#ED3237]/25 p-4">
@@ -153,7 +159,7 @@ const App: React.FC<Props> = ({ actorOptions }) => {
                     ))}
                   </InputOTPGroup>
                 </InputOTP>
-                <div className="text-red-500 mb-4">{errorMessage}</div>
+                <div className="text-red/100 mb-4">{errorMessage}</div>
 
                 <Footer />
               </div>
@@ -181,7 +187,7 @@ const App: React.FC<Props> = ({ actorOptions }) => {
                     ))}
                   </InputOTPGroup>
                 </InputOTP>
-                <div className="text-red-500 mb-4">{errorMessage}</div>
+                <div className="text-red/100 mb-4">{errorMessage}</div>
 
                 <Footer />
               </div>

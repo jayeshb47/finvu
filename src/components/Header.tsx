@@ -12,9 +12,8 @@ const Header = ({
       </h1>
       <p className="text-gray-600 mb-8 text-sm">
         6-digit code sent to{" "}
-        <span className="font-semibold">+91 {mobileNumber}</span> from{" "}
-        <span className="font-semibold">Finvu</span> to fetch your Stocks and
-        Bonds
+        <span className="font-bold">+91 {mobileNumber}</span> from{" "}
+        <span className="font-bold">Finvu</span> to fetch your Stocks and Bonds
       </p>
     </div>
   );

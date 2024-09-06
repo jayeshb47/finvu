@@ -1,6 +1,4 @@
-import LoadingDot from "./ui/loading-dot";
-
-const LoadingScreen = ({
+const ErrorScreen = ({
   title = "Loading...",
   errorMessage,
 }: {
@@ -13,15 +11,9 @@ const LoadingScreen = ({
       style={{ backgroundImage: "url('/assets/bg.png')" }}
     >
       <div className="text-center p-5">
-        {errorMessage ? (
-          <div className="text-red/100 uppercase font-semibold">
-            {errorMessage}
-          </div>
-        ) : (
-          <LoadingDot />
-        )}
-        <h2 className="text-2xl font-bold text-black/100 dark:text-gray-200 mt-8">
-          {errorMessage ? "There seems to be a problem" : title}
+        <div className="text-red/100">{errorMessage}</div>
+        <h2 className="text-2xl font-semibold text-black/100 dark:text-gray-200 mt-10">
+          {title}
         </h2>
         <p className="text-sm text-black/50 mt-2.5">
           It will take a few seconds. Please don’t close the browser or refresh
@@ -32,4 +24,4 @@ const LoadingScreen = ({
   );
 };
 
-export default LoadingScreen;
+export default ErrorScreen;
