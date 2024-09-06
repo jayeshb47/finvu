@@ -5,12 +5,10 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "./components/ui/input-otp";
-import { Card, CardHeader, CardTitle, CardContent } from "./components/ui/card";
 import { useActorRef, useSelector } from "@xstate/react";
 import { machine } from "./lib/machines/firstmachine";
-import { LoadingSpinner } from "./components/ui/loading-spinner";
 import type { ActorOptions, AnyActorLogic } from "xstate";
-import { ChevronLeft, ChevronRightIcon } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "./components/ui/button";
 import LoadingScreen from "./components/LoadingScreen";
 import Header from "./components/Header";
