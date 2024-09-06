@@ -129,7 +129,7 @@ const App: React.FC<Props> = ({ actorOptions }) => {
                 <div className="w-1 h-1 bg-gray-300 rounded-full" />
                 <div className="w-1 h-1 bg-gray-300 rounded-full" />
               </div>
-              <span className="text-sm text-gray-600">Step 1</span>
+              <span className="text-sm text-gray-600">Step 2</span>
             </div>
           </div>
 
