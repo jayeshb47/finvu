@@ -24,6 +24,7 @@ const config: Config = {
       colors: {
         "black/50": "#878B94",
         "black/100": "#0F172A",
+        "red/100": "#ED3237",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
