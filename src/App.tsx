@@ -13,7 +13,6 @@ import { Button } from "./components/ui/button";
 import LoadingScreen from "./components/LoadingScreen";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import ErrorScreen from "./components/ErrorScreen";
 
 interface Props {
   actorOptions: ActorOptions<AnyActorLogic> | undefined;
