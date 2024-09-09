@@ -23,6 +23,7 @@ const config: Config = {
       },
       colors: {
         "black/50": "#878B94",
+        "black/70": "#575D6A",
         "black/100": "#0F172A",
         "red/100": "#ED3237",
         border: "hsl(var(--border))",

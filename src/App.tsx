@@ -13,13 +13,13 @@ import { Button } from "./components/ui/button";
 import LoadingScreen from "./components/LoadingScreen";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { cn } from "./lib/utils";
 
 interface Props {
   actorOptions: ActorOptions<AnyActorLogic> | undefined;
 }
 const App: React.FC<Props> = ({ actorOptions }) => {
   const actorRef = useActorRef(machine, actorOptions);
-  // const [errorMessage, setErrorMessage] = useState("");
   const screenToRender = useSelector(actorRef, (state) => {
     console.log("the top console", state);
     if (
@@ -89,6 +89,18 @@ const App: React.FC<Props> = ({ actorOptions }) => {
 
   const [otp, setOtp] = useState<string>("");
   const [otp2, setOtp2] = useState<string>("");
+  const [countdown, setCountdown] = useState(30);
+  const [isCountdownComplete, setIsCountdownComplete] = useState(false);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setIsCountdownComplete(true);
+    }
+  }, [countdown]);
+
   useEffect(() => {
     window.finvuClient.open();
     console.log(window.finvuClient);
@@ -126,13 +138,26 @@ const App: React.FC<Props> = ({ actorOptions }) => {
                 <ChevronLeft className="h-6 w-6" />
               </Button>
               <div className="flex items-center space-x-1">
-                <div className="w-8 h-1 bg-blue-600 rounded" />
-                <div className="w-1 h-1 bg-gray-300 rounded-full" />
-                <div className="w-1 h-1 bg-gray-300 rounded-full" />
-                <div className="w-1 h-1 bg-gray-300 rounded-full" />
-                <div className="w-1 h-1 bg-gray-300 rounded-full" />
+                <div
+                  className={cn(
+                    " h-1 transition-all duration-300",
+                    screenToRender === "login"
+                      ? " w-8 bg-black/100 rounded"
+                      : " w-1 bg-black/70 rounded-full"
+                  )}
+                />
+                <div
+                  className={cn(
+                    "h-1 transition-all duration-300",
+                    screenToRender === "login"
+                      ? " w-1 bg-black/70 rounded-full"
+                      : " w-8 bg-black/100 rounded"
+                  )}
+                />
               </div>
-              <span className="text-sm text-gray-600">Step 2</span>
+              <span className="text-sm text-black/70 transition-all duration-300">
+                {screenToRender === "login" ? "Step 1" : "Step 2"}
+              </span>
             </div>
           </div>
 
@@ -187,6 +212,22 @@ const App: React.FC<Props> = ({ actorOptions }) => {
                   </InputOTPGroup>
                 </InputOTP>
                 <div className="text-red/100 mb-4">{errorMessage}</div>
+
+                {!isCountdownComplete ? (
+                  <p className="text-left text-black/50 mb-8 text-sm">
+                    Resend OTP in{" "}
+                    <span className="bg-gradient-to-r from-[#1A73E9] to-[#ED3237] bg-clip-text text-transparent">
+                      {countdown} secs
+                    </span>
+                  </p>
+                ) : (
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-gradient-to-r from-[#1A73E9] to-[#ED3237] bg-clip-text text-transparent"
+                  >
+                    Resend Otp
+                  </button>
+                )}
 
                 <Footer />
               </div>

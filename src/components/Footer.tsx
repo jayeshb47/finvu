@@ -6,12 +6,6 @@ const Footer = () => {
   return (
     <div>
       {" "}
-      <p className="text-left text-black/50 mb-8 text-sm">
-        Resend OTP in{" "}
-        <span className="bg-gradient-to-r from-[#1A73E9] to-[#ED3237] bg-clip-text text-transparent">
-          25 secs
-        </span>
-      </p>
       <div className="flex justify-end">
         <Button
           variant="outline"
