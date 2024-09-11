@@ -125,7 +125,7 @@ const App: React.FC<Props> = ({ actorOptions }) => {
 
   return (
     <>
-      {screenToRender === "loading" && (
+      {(screenToRender === "loading" || screenToRender === "consent") && (
         // (errorMessage ? (
         //   <ErrorScreen errorMessage={errorMessage} />
         // ) : (
@@ -234,7 +234,7 @@ const App: React.FC<Props> = ({ actorOptions }) => {
               </div>
             </div>
           )}
-          {screenToRender === "consent" && <h1 className="">consent sent</h1>}
+          {/* {screenToRender === "consent" && <h1 className="">consent sent</h1>} */}
         </div>
       )}
     </>
