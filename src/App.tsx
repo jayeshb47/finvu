@@ -49,6 +49,7 @@ const App: React.FC<Props> = ({ actorOptions }) => {
     }
 
     if (state.matches("Handle Consent")) {
+      window.location.href = "https://checklimit.stage.abhiloans.com";
       return "consent" as const;
     }
 
