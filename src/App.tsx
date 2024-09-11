@@ -49,7 +49,7 @@ const App: React.FC<Props> = ({ actorOptions }) => {
     }
 
     if (state.matches("Handle Consent")) {
-      window.location.href = "https://checklimit.stage.abhiloans.com";
+      window.location.href = `https://checklimit.stage.abhiloans.com/?finRequestId=${finRequestId}`; //TODO change to whatever url we have to redirect to
       return "consent" as const;
     }
 
@@ -87,6 +87,7 @@ const App: React.FC<Props> = ({ actorOptions }) => {
   const mobileNumber = queryParams.get("mobileNumber") || "";
   const panNumber = queryParams.get("panNumber") || "";
   const handleId = queryParams.get("handleId") || "";
+  const finRequestId = queryParams.get("finRequestId") || "";
 
   const [otp, setOtp] = useState<string>("");
   const [otp2, setOtp2] = useState<string>("");
