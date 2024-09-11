@@ -19,7 +19,17 @@ interface Props {
   actorOptions: ActorOptions<AnyActorLogic> | undefined;
 }
 const App: React.FC<Props> = ({ actorOptions }) => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const mobileNumber = queryParams.get("mobileNumber") || "";
+  const panNumber = queryParams.get("panNumber") || "";
+  const handleId = queryParams.get("handleId") || "";
+  const finRequestId = queryParams.get("finRequestId") || "";
+
   const actorRef = useActorRef(machine, actorOptions);
+  const consentId = useSelector(actorRef, (state) => {
+    return state.context.consentId;
+  });
   const screenToRender = useSelector(actorRef, (state) => {
     console.log("the top console", state);
     if (
@@ -49,7 +59,11 @@ const App: React.FC<Props> = ({ actorOptions }) => {
     }
 
     if (state.matches("Handle Consent")) {
-      window.location.href = `https://checklimit.stage.abhiloans.com/?finRequestId=${finRequestId}`; //TODO change to whatever url we have to redirect to
+      console.log({ consentId });
+      console.log({ finRequestId });
+      if (consentId != "") {
+        window.location.href = `https://checklimit.stage.abhiloans.com/?finRequestId=${finRequestId}&consentId=${consentId}`; //TODO change to whatever url we have to redirect to
+      }
       return "consent" as const;
     }
 
@@ -81,13 +95,6 @@ const App: React.FC<Props> = ({ actorOptions }) => {
   const fipName = useSelector(actorRef, (state) => {
     return state.context.fipIds[state.context.currentFipIndex];
   });
-
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const mobileNumber = queryParams.get("mobileNumber") || "";
-  const panNumber = queryParams.get("panNumber") || "";
-  const handleId = queryParams.get("handleId") || "";
-  const finRequestId = queryParams.get("finRequestId") || "";
 
   const [otp, setOtp] = useState<string>("");
   const [otp2, setOtp2] = useState<string>("");

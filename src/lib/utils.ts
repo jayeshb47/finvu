@@ -275,6 +275,7 @@ export const handleConsentApproval = async (
 ): Promise<{
   status: boolean;
   error: string | undefined;
+  consentId: string | undefined;
 }> => {
   console.log("hii");
 
@@ -316,18 +317,21 @@ export const handleConsentApproval = async (
       return {
         status: false,
         error: consentResponse.message,
+        consentId: undefined,
       };
     }
 
     return {
       status: true,
       error: undefined,
+      consentId: consentId,
     };
   } catch (error) {
     console.error(`Consent ${status.toLowerCase()} failed`, error);
     return {
       status: false,
       error: error as string,
+      consentId: undefined,
     };
   }
 };

@@ -26,6 +26,7 @@ export const machine = setup({
       mobileNumber: string;
       panNumber: string;
       accountLinkRefNumbers: string;
+      consentId: string;
     },
     // events: {} as
     //   | { type: "SUBMIT_OTP" }
@@ -119,7 +120,7 @@ export const machine = setup({
       if (!response.status) {
         throw new Error(response.error);
       }
-      return response.status;
+      return response.consentId;
     }),
     sendLoginOtp: fromPromise(
       async ({
@@ -158,6 +159,7 @@ export const machine = setup({
     mobileNumber: "",
     panNumber: "",
     accountLinkRefNumbers: "",
+    consentId: "",
   },
   schema: {
     services: {
@@ -343,7 +345,9 @@ export const machine = setup({
 
             onDone: {
               target: "COMPLETE",
-              actions: assign({ error: () => undefined }),
+              actions: assign({
+                consentId: ({ event }) => event.output as string,
+              }),
             },
             onError: {
               target: "SEND_CONSENT",
