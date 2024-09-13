@@ -17,6 +17,22 @@ const Footer = () => {
           </span>
         </Button>
       </div>
+      <footer className="absolute bottom-0 p-5 bg-white">
+        <div className="flex flex-col items-center justify-center">
+          <img
+            src="/assets/finvu.png"
+            alt="Finvu Logo"
+            className="w-20 h-10 mb-2 object-contain"
+          />
+          <p className="text-center text-xs text-gray-600 max-w-xs">
+            Powered by Finvu
+          </p>
+          <p className="text-center text-xs text-gray-600 max-w-xs">
+            "Finvu brand name of Cookiejar Technologies, a regulated and
+            licensed RBI Account Aggregator"
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };

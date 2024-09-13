@@ -8,6 +8,7 @@ import {
 } from "xstate";
 import {
   checkAccounts,
+  getConsentDetails,
   handleConsentApproval,
   handleLinking,
   handleLoginOrVerify,
@@ -27,6 +28,7 @@ export const machine = setup({
       panNumber: string;
       accountLinkRefNumbers: string;
       consentId: string;
+      consentDetails: any;
     },
     // events: {} as
     //   | { type: "SUBMIT_OTP" }
@@ -122,6 +124,14 @@ export const machine = setup({
       }
       return response.consentId;
     }),
+    getConsentDetails: fromPromise(async () => {
+      const response = await getConsentDetails();
+
+      if (!response.status) {
+        throw new Error(response.error);
+      }
+      return response;
+    }),
     sendLoginOtp: fromPromise(
       async ({
         input,
@@ -149,7 +159,7 @@ export const machine = setup({
     },
   },
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDUwCcCWAzAngAgDEBJABVgDoBRAOwBd0Nqo8AbAeykbzdoAcBiCG2physWgEN65VJlyFSFGvUxNWHLj14BtAAwBdRKF5tYGWhmFGQAD0QAmAJwBWXeV0AOAGwBGAOyOAMxegf5BADQgOIiB9vbkPs6+Hh72PrqOfh66gQC+uZGy2PjEZFR0DGrsnNTcfOREACIAMpT8sACuAEYAtubkWnqGSCAmZhZWI3YIPiF+5IGp3v5ZACz2uquR0Qj2q6vkq86Bm-Z+fquBx84e+YUM8qVKFarM1Zr1AMoAqgBCALJEAAqQKIADkAOKCYSiRgANzYAGtREVHopyipGG8NLUtGJun1aBYmENrGNzJZqNZpvZFvM9rSvM4gvYvB4-NtEP43J5Yl5HBlNo4VncQKiSujlJVsTU6rxyD8AcDQZD+Og0Gw0OReCwpFhNT0ZA8JWUpa91LK8Z1euZiVBSSNyRMqVMuXMFktfOcPOtNpyZq5yI5g5kjot7OzLqLxQoyjHSngmrBoSIxJJpPH0ZmSInGrAHcZTBTJqAaWz4n4fFX9kdNldAv6fHFAuRsj7fM4fAL1l5o8bYxRs7mKABhAASlBHAGkAPpgygADSBM9K-ALoyLzupMWy5CcAscqT8IUuzn9jnW5C8rPWjn5DLSfbkJsH-YTSfI48ns-nS5XpDXHxhkLcZKW3BA23IZwb1iC4fWcVYPHPc4El0ZlDw8RJ7BuRwn2KAcjWfWNh0I-CAHk+DwfU0FjFNRHEKQUTfLNmJzD8Ywo3gqM1WN1ydMDXRmXR4kCQIgiuQVhNcBsoi5XQmQSDxmWwk5nErQI-DwtE41YkiOMo6jY0-CdpxnABBMFGhnT5KEsmcyKBEg6PIeEkSYoinlI7SSLhY1OIITUCAweVYDAagIE4vjNwE0tEGcQNVl0HxEsPIJ9h8RtoPiRCvHWc5PFWO9ewKMVWNfDzSD0-tOO4mjSmM79zLsmy7Icpz1U1bVdVoajDWzcr8PfPNyF859-MC4KxDCiK+Ci0CS1sRAAFpAkS1tfA0xDUgjCJZJmUJnEOBDK1cPwhV0TSSv6ryTSqoiasM+qv1MiyrJaqy2v4CQWDQMAJAgHByBYRhkQgObixdWKEHitw73ZNTVi7YMfBknZZlCchzlEjwJKyUJivuCqdKJu7yIMnj6oAdTM4EVzIgAlezHPaAl+kGAwyWihbphRjIEgZE5giyRIOT2rCPCg3LCrOa8NOFLSXxu4j2Oq8m6tIBU-kBEFwShIRU1c5Elc8ocP1G4pxrQIKQtZoksXBrdBK7BCgyOQqLyrLxdD9MXVpbPKmy8Lxjw2JsFYI03hv0rjHo1xVtZVKEOq1HU9QNY2WJJs2-L4AKrcm61CTtB2YsWmYUfiflrhcRLvdWLxG1iA4-bOxZkf2cPPLHCRwpYMA8BHYRQroBVbKskcyLBFqgWcw33MG9Fu97-vB+oYfaBciA+5L7mYjiCWNNcH1giuRxWUbVlHFbXkcYFeHbiusryCXreV6HsKN-emcJ6n2yZ+Trqac0B9Sfi-PuA934jwwK-HekMy4RlSAsZkYl4pNiUv4Rssw3CiQ2JsL2iRg4E1KkTCgnxppYjwM0HEeBOLOQYhmJ+ZDwoUKobKSKHNHRczgTzRKPgEj+AjNBPwgjHD+ibleJIPgUhpAyFkHInd0RMIgCw6hnEGgtDaMPCAAxZocJAhDcC6MrxJTUmkLsiFZgNz2ojZuAoEI4w0okH0CiyhKJUWwr4WtlS61ntQBERtrpuLUKwrgajoHbz0Ruea3DEDw3WsI9GSRIwZT2qtHkGxzj12OE4IOLjSHkOCaozxSodaqgAanHq6dAkFOYCE2oYSYGRP4rvGYIRjEizMReTCQcxEbCDJtbI6R0hn1ZHkjE0oLQfHlE0Vo-BfpaJ0ToJpXDDG8P4cIpSZwRH+n2NleSXZMLHA0klYqJVqBsAgHAaw-VObRPAktRCBxlgDO2h4XaOwlp7HcN7YSaF5L3ijI-Eh4zzTvFxHwW5BinaFXmMLRYNwzhqRxv6Np7s4bCXbGhbwYyzQULBXKdRrRIWOyhokI4mNMLwqPEi1GDgFK3g7MHFwXYcUvDxdQvE8dvGQmJaXHmyM9zrA0mcTY6wEKZSvmhQ8PZuTe1mKyzEVQOX1Anv8EgrQgSUF5S0s4l5LjnAuEHVwbJGwCmvtKjYRwpFHDGZHeAnC7mCQecEdaKM4KvPebE+K-MpZVlMfyHwtrdIfmej+Rcy5SjapidDCWTg4iJAIfFTsoi9ouBbPuGForVrYSDVnYa30WDW1gIPHoOowD0CjeBYIsMmxXFyn7YU58xYZBbBJDYMsYX2FzQvNiUdVYxwpqQStTrFgS2ee6-enqZhxHmDXIOsREgnBRt27yKt7pqyMqGpqb0x5MxIMOqGS0LzuAZEyXKpiEJnjFq4Q6mxMLsjeReRKD9CY9oGquvt66B3qxIOQamtMCAMz3Qesu6QXYClrZkbCIQr1owQi2O8CDoKLBOHeFdt011k2-UZLlpSIQgZ5vFCWF5ri0hRp2Y4jdYiHByDcRC3tVpSPQ8rT9WHaqbrImqjVWqHVQqhrSRBxxkoRiOG8y4jckgJGONeQRp0xlgLfmvD+BGHBrAWH4VwwpyOiRSWjC68QcYbG2qsLIwj5M91fhApTI8v4-2nip3Yhn1OaarPWUIF8bgUvdsyYSwjHxArfc-Cz4DV7r0-Jx9VlBNUOfrG4C4jIg6XCkSmtGTg3DHEKkkk8xqxlBNqUU3gDm9j+lpP7TaVxhmPvlQF7S+TmGFI8dMjRDnhFiMQocTIq1vRXG8HkGris8uUIK5rEpicHMmavt4PzoQIy+D2KLHYsRiOdYsQEbIzhcs1KG418LXGos8f0SS0DXZ-ZshSGhC4cFaUIGrZjEzXWvZraCPkfIQA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDUwCcCWAzAngAgDEBJABVgDoBRAOwBd0Nqo8AbAeykbzdoAcBiCG2physWgEN65VJlyFSFGvUxNWHLj14BtAAwBdRKF5tYGWhmFGQAD0QAmAJwBWXeV0AOAGwBGe74B2Lw8AFl1nABoQHEQAZnt7ch9nL3sAnw9PXUcA2K8AX3yo2Wx8YjIqOgY1dk5qbj5yIgARABlKflgAVwAjAFtzci09QyQQEzMLKzG7BB8vWIDyWI80gJCQ538Aj0comIR7DfJN2IyPHz9fZ1jnQuKGeXKlKtVmWs1Glvb+NDgwagQIZ8EbWCbmSzUayzHxhHxJHwBezZXQ+Fb+EL7RAbRJhVKbeaw3w+e4gEpPRSVFSMd4aepacgAZQAqgAhACyRAAKlyiAA5ADigmEokYADc2ABrUTksqU5TVWl1Bq8MS9Aa0CxMUFjcFTKEzBwrJZHI55WJ45wbLFzAJuTyxWKOW5eLwuWGk2UKCoKt7qZUMlkc7m8wX8dBoNhoci8FhSLBRvoyR5yn2vGn+z6q7r9cxaqA64ymCHTUAwhZLdEBdabba7G3JeG6Zu6LzOavVtvrT0p70UL3lPAtWDCkRiSTSAeUqckIfNWCF8bF-XQhzBRLpTyORyo+zJRxeBsJWLkTIedtedYuXQrHtyVP93uD4fkADCAAlKK+ANIAfT5lAABpcr+5T8IueqQquhyhOQORtu2-irPYoQ2qs8IWosKwhGc3gXHepR9sm97enOFAfl+f4AcBoGkOBPijEWkxQYahzrHBQTOIh64oZi0SII4sKnjhCwXM4lyOCEBEUhUM5kcRhEAPJ8HgCZoN6o6iOIUgyk+056bOL5espvCqVG3oQcuLFlg4sHwVxSI8ah-EIN4lYiV4ugoTc67SQ+CkyfJxkqWp3pvp+P6-gAgnyzS-oylCxb+ilciQmnkOKUq6SRzwBam8liimJkEFGBAYNmAIQCZlnMaWtiIFxbgHh4QSSYsbZeQ2ISuuQ7bNhc9hnD4uhSUUZIGY+OWkEFvYmWZ6nlOFlHRUlCVJSlaURlGMZxrQalJjOk2Ec+87kIV97FaV5ViJV1UGGCVl1TCIT2A2twhL1zqbM4HixOEbp+URclGbNIXmYtFGRTFcVrXFG38BILB-BIEA4OQLCMNKEA1SWBo2QgjVwcErU4ZxnUufMZzkNW8REo6I26AEgO5cDp3BaZoWLQA6lF3KgYpABKyWpZ06qDMM926o9eP1XMaKJG6PmMxewR8QcRLOO4doZG6ISOB4oQFGNh15aRIMkXNnOkEybKcjy-JCkIY6ZdKpsswZBVFXwJVoGV2Zi5qNI4yurE+C4H2SVxL04eEUdvThJz+I4KHpKEGQksbE1u9N5tKWDC3W0GduhkKW3RrG8aJtnskey+52lJdvvXTmGr5sH1my5c8TkIreTK0EqtvUcywic2yfJ-EdyZ1NFTvhIgIsGAeCvsIsAArQTKJXFr6KXya1culLvZcdlJzwvS8r9Qa90BlECL+3T3Yo68KDThsLniE6SvRT9NJL9P04V+luWIzNT7zzvhfVe69N5JR3nvRKB8y47UrmgA6Wcz4QOXlAm+GAIEPxlrMJ055yB7m8IJI4KQ-BHmRNTVsLULiImbH4UBs9wGLywVfaBApKAgTgfvX8zQeG81aIyQ+1AJSuxNhg9hl9r4bwgGASQGAWALklkxXG0F4goWWOsVIfgmGIjeuEXq8x0guGTjcR0LCKDSMgZwm+3DeG734YIrkwjRFIIrntKuUi2F2LkeQBRSiVH4OginRIzp4iM1SOJFIDYw5eHcE6Z0RxPK7HmNY8gtiOEBJ5nzAggtfx8IQQjAAxqUsAvAN6lOwbQUJrFFjOEcO4N0v1-Cth3GrRAaJHQnGyNuNpeEbiZOybI6BeSQIFKFsUvkB8FHUDRjU+xdS1FLlqgQuIAQmktP1vETyboRoNn6XBFIgkwhYWSFPB4M8KCMkqhmVodI8AmXStpScWc7mAgeU8u6jE1kaNDnCBESIURolWF4LpCB4gfTbKkVOWQch5EyZ8iA3zlQmSaG0Do18gQSz+ZBR+cwFg91RFxN0X1GYGxtCEISTplYvT8MnVETNp4nwqCitFXAMVFxDA7MREjj4yVufctQjz0WNFwffVZBKNmuS2aeS8GQ7SrGZd-A4Fp7TIkEhPDYAQDxG2uWy4VXzRU-MaDy+2YZPG7X2tXY1qLTXitVJKsA9T8aUxJZc8lGqdgeBtFEuCjTxK7nErkI2Y1qBsAUfAMYh0HrrOggAWiODaZNJ5twZszZmiFmTfQZg+PSPg8aAXur1ksHYfh2y7GRJ-AINpiV6wzRQ3wrYUK5vTDUJ5DJviUGLSHd1VpNYVvsFWpltabT+E1i9HIYczm3FbO26knaAzmttrywUfaO4wm3C-BlB4cg1oWA2bZ4RtzpDyMEMO9hF2KkzIW1UO92QkHaFyXtUsE2sTSC9E4jTkjIgxLCBsO5Tz9LtCk50l4rnjRudXMim7CVOhtLkE8oR0SqzRI2TJrNyIRSokBSZpB4OypamhP6JxiaIlwtWK0WHa6nURiwP2sAV59FjIosARHoJ+DVd0sOKGcIpBbN1SStGZ4zQtvnb0nHWKSSPHkYSeRdiOjcs6UTbLxN5w5uDa2kM-zQ3ilvYWJBpOlo8CcVD3hHTeVbJECmpx3DdVyPrA8WwoMm2w6bS22mSDkAmfzIWG0TOy31SQ3In9Vif1uE0rqBterdUvL9c4OE1OBVzvILzBcfMWpLkFmEXEzORxWE6NIrhybqys30i0I62xpHiCyw1QrYNpfwBlsKj7n08Lfeo-tstBqrF6mcbqpx9VxJ-ikJINxuqNM8h0kZficnr1yw4HYH1FjdSOC9C4wQjl+BOH1LyGxLwxLm+fBbN9YZFOcQgpbULnSa1fvS7ww0LRvTDkkGbzYCTnkZidzBYyb7tZfV1-5PXZhTZPJ5ZIBJwh6ts+VhOZoaUHkpls37MjankEcZd+BsyBFCKICIm7KFu5rfxJt+YfqKZOA+nrWmNXVZBDR-48ZvNJmFJmVyG771mlNMwmCpwCQh5LFp2cV0mQ0iDWRSK5gYquVFvfSW3rkLBonlJrWg5549VS5NTLs1qoe03aRP6kIZmy0m6cIsdYTpRoNf8hyx1cvVTZYdjdz+zS3JhxvMNOhPGoXaLPWWm8OFP42+g0apk0u8Cy-qBiwHnWbsSVV8TJp1ZGaOn9Z5amIfKFHYNosQohQgA */
   context: {
     fipIds: ["fip@finrepo", "fip@finvugst"],
     currentFipIndex: 0,
@@ -160,7 +170,9 @@ export const machine = setup({
     panNumber: "",
     accountLinkRefNumbers: "",
     consentId: "",
+    consentDetails: undefined,
   },
+
   schema: {
     services: {
       submitOtp: {
@@ -336,7 +348,7 @@ export const machine = setup({
     },
 
     "Handle Consent": {
-      initial: "SEND_CONSENT",
+      initial: "GET_CONSENT_DETAILS",
       states: {
         SEND_CONSENT: {
           invoke: {
@@ -357,8 +369,36 @@ export const machine = setup({
             src: "handleConsent",
           },
         },
+
         COMPLETE: {
           type: "final",
+        },
+
+        GET_CONSENT_DETAILS: {
+          invoke: {
+            id: "Verify FIPs.Handle Consent.details",
+            // input: ({ context: { otp } }) => ({ otp }),
+
+            onDone: {
+              target: "WAIT_FOR_CONSENT",
+              actions: assign({
+                consentDetails: ({ event }) => event.output.consentDetails,
+              }),
+            },
+            onError: {
+              target: "GET_CONSENT_DETAILS",
+              // @ts-ignore
+              actions: assign({ error: ({ event }) => event.error.nessage }),
+            },
+            src: "getConsentDetails",
+          },
+        },
+
+        WAIT_FOR_CONSENT: {
+          on: {
+            "accept.consent": "SEND_CONSENT",
+            "deny.consent": "COMPLETE",
+          },
         },
       },
     },

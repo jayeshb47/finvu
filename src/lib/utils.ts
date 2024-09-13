@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
@@ -44,6 +45,7 @@ declare global {
         FIPDetails: Array<FIPDetails>,
         handleStatus: "ACCEPT" | "DENY"
       ) => Promise<ConsentResponse>;
+      consentRequestDetails: () => Promise<any>;
     };
   }
 }
@@ -332,6 +334,39 @@ export const handleConsentApproval = async (
       status: false,
       error: error as string,
       consentId: undefined,
+    };
+  }
+};
+
+export const getConsentDetails = async (): Promise<{
+  status: boolean;
+  error: string | undefined;
+  consentDetails: any;
+}> => {
+  try {
+    const consentDetailResponse =
+      await window.finvuClient.consentRequestDetails();
+    console.log({ consentDetailResponse });
+
+    if (consentDetailResponse.status === "FAILURE") {
+      return {
+        status: false,
+        error: consentDetailResponse.message,
+        consentDetails: undefined,
+      };
+    }
+
+    return {
+      status: true,
+      error: undefined,
+      consentDetails: consentDetailResponse,
+    };
+  } catch (error) {
+    console.error(`Consent ${status.toLowerCase()} failed`, error);
+    return {
+      status: false,
+      error: error as string,
+      consentDetails: undefined,
     };
   }
 };

@@ -14,6 +14,16 @@ import LoadingScreen from "./components/LoadingScreen";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { cn } from "./lib/utils";
+import {
+  Table,
+  TableCaption,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "./components/ui/table";
+import { ScrollArea } from "./components/ui/scroll-area";
 
 interface Props {
   actorOptions: ActorOptions<AnyActorLogic> | undefined;
@@ -41,7 +51,8 @@ const App: React.FC<Props> = ({ actorOptions }) => {
       }) ||
       state.matches({
         "Verify FIP IDs": { "Verify Otp for FIP": "CHECK_AND_SEND_OTP" },
-      })
+      }) ||
+      state.matches({ "Handle Consent": "GET_CONSENT_DETAILS" })
     ) {
       return "loading" as const;
     }
@@ -58,12 +69,16 @@ const App: React.FC<Props> = ({ actorOptions }) => {
       return "fipLogin" as const;
     }
 
-    if (state.matches("Handle Consent")) {
+    if (state.matches({ "Handle Consent": "COMPLETE" })) {
       console.log({ consentId });
       console.log({ finRequestId });
-      if (consentId != "") {
-        window.location.href = `https://checklimit.stage.abhiloans.com/?finRequestId=${finRequestId}&consentId=${consentId}`; //TODO change to whatever url we have to redirect to
-      }
+      // if (consentId != "") {
+      //   window.location.href = `https://checklimit.stage.abhiloans.com/?finRequestId=${finRequestId}&consentId=${consentId}`; //TODO change to whatever url we have to redirect to
+      // }
+      return "consentDone" as const;
+    }
+
+    if (state.matches({ "Handle Consent": "WAIT_FOR_CONSENT" })) {
       return "consent" as const;
     }
 
@@ -94,6 +109,15 @@ const App: React.FC<Props> = ({ actorOptions }) => {
   });
   const fipName = useSelector(actorRef, (state) => {
     return state.context.fipIds[state.context.currentFipIndex];
+  });
+
+  const fips = useSelector(actorRef, (state) => {
+    return state.context.fipIds;
+  });
+
+  const consentDetails = useSelector(actorRef, (state) => {
+    console.log("consentDetails", state.context.consentDetails);
+    return state.context.consentDetails;
   });
 
   const [otp, setOtp] = useState<string>("");
@@ -132,8 +156,8 @@ const App: React.FC<Props> = ({ actorOptions }) => {
   }, [otp, otp2]);
 
   return (
-    <>
-      {(screenToRender === "loading" || screenToRender === "consent") && (
+    <div>
+      {(screenToRender === "loading" || screenToRender === "consentDone") && (
         // (errorMessage ? (
         //   <ErrorScreen errorMessage={errorMessage} />
         // ) : (
@@ -242,10 +266,173 @@ const App: React.FC<Props> = ({ actorOptions }) => {
               </div>
             </div>
           )}
-          {/* {screenToRender === "consent" && <h1 className="">consent sent</h1>} */}
+          {screenToRender === "consent" && (
+            <div className="w-full max-w-md mx-auto">
+              <Table>
+                {/* <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead className="text-right">
+                      {consentDetails}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader> */}
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Consent Validity</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {new Date(consentDetails.startTime).toLocaleDateString(
+                        "en-GB",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}{" "}
+                      -{" "}
+                      {new Date(consentDetails.expireTime).toLocaleDateString(
+                        "en-GB",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Frequency</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {consentDetails.Frequency.value}-
+                      {consentDetails.Frequency.unit}
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Consent Types</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {consentDetails.consentTypes.map((type, index) => (
+                        <span key={index}>
+                          {type}
+                          {index < consentDetails.consentTypes.length - 1
+                            ? ", "
+                            : ""}
+                        </span>
+                      ))}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">FIU Name</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {consentDetails.FIU.name}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">FIP Name</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {fips.map((type, index) => (
+                        <span key={index}>
+                          {type}
+                          {index < fips.length - 1 ? ", " : ""}
+                        </span>
+                      ))}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">VUA/Handle</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">$150.00</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Purpose-Text</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {consentDetails.Purpose.text}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">FI Data Range</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {new Date(
+                        consentDetails.DataDateTimeRange.from
+                      ).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}{" "}
+                      -{" "}
+                      {new Date(
+                        consentDetails.DataDateTimeRange.to
+                      ).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Data Life</div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {consentDetails.DataLife.value}-
+                      {consentDetails.DataLife.unit}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+
+              <div className="px-4 py-6 bg-white">
+                <div className="max-w-md mx-auto flex gap-4">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-1 bg-gradient-to-r from-[#1A73E9] to-[#ED3237] text-white font-semibold p-px rounded-full"
+                  >
+                    <span className="flex w-full h-full bg-black/100 text-white rounded items-center justify-center rounded-full">
+                      Aceept
+                    </span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-1 bg-gradient-to-r from-[#1A73E9] to-[#ED3237] text-white font-semibold p-px rounded-full"
+                  >
+                    <span className="flex w-full h-full bg-black/100 text-white rounded items-center justify-center rounded-full">
+                      Deny
+                    </span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
-    </>
+    </div>
   );
 };
 
